@@ -1,3 +1,12 @@
+/*
+  Name: Magdalena Dobinda
+  Course: CNT 4714 Fall 2022
+  Assignment title: Project 3 – A Two-tier Client-Server Application
+  Date:  October 30, 2022
+
+  Class:  Enterprise Computing
+*/
+
 
 import java.io.IOException;
 import java.sql.Connection;

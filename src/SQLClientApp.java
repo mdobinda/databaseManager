@@ -1,3 +1,14 @@
+/*
+  Name: Magdalena Dobinda
+  Course: CNT 4714 Fall 2022
+  Assignment title: Project 3 – A Two-tier Client-Server Application
+  Date:  October 30, 2022
+
+  Class:  Enterprise Computing
+*/
+
+
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.GridLayout;
@@ -214,6 +225,7 @@ public class SQLClientApp extends JFrame {
                         if(Objects.equals(String.valueOf(propertiesList.getSelectedItem()), "root.properties"))
                         {
                             String selectedItem = rootUser.getProperty("URL");
+                            String operations = rootUser.getProperty("operations");
                             connection = DriverManager.getConnection(String.valueOf(selectedItem), rootUser.getProperty("username"), rootUser.getProperty("password"));
                             statusLabel.setText("Connected to " + selectedItem);
                             System.out.println("username: " + rootUser.getProperty("username"));
