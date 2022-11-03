@@ -1,4 +1,3 @@
-
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.GridLayout;
@@ -18,23 +17,48 @@ import javax.swing.border.Border;
 import javax.swing.table.DefaultTableModel;
 
 
-public class GUI extends JFrame {
+public class SQLClientApp extends JFrame {
 
+    // Creating Labels
+    private JLabel usernameLabel = new JLabel("Username", SwingConstants.CENTER);
+    private JLabel passwordLabel = new JLabel("Password", SwingConstants.CENTER);
+    private JLabel statusLabel = new JLabel("No connection", SwingConstants.CENTER);
+    private JLabel propertiesLabel = new JLabel("Properties", SwingConstants.CENTER);
 
-    private JLabel driver, dbURL, usernameLbl, passwordLbl, status, status2, propertiesLabel;
-    private JComboBox drivers, urlList, propertiesList;
-    private JTextField username;
-    private JPasswordField password;
-    private JTextArea cmd;
-    private JButton connect, clear, exec, clearRes, testButton;
+    // User, pass and text are
+    private final JTextField username = new JTextField();
+    private final JPasswordField password = new JPasswordField();
+    private JTextArea SQLcommand;
+
+    // Drop down list
+    String[] properties = {"root.properties", "client.properties"};
+    private JComboBox propertiesList = new JComboBox(properties);
+
+    // Buttons
+    private JButton connectButton  = new JButton("Connect to Database");
+    private JButton SQLclearButton = new JButton("Clear SQL Command");
+    private JButton executeCommandButton  = new JButton("Execute SQL Command");
+    private JButton clearResultButton  = new JButton("Connect to Database");
+
+    // Table model
     private ResultSetTableModel modelTable;
     private JTable table;
-    private Connection conn;
+
+    // headers
+    JLabel leftHeader = new JLabel("Connection Details", SwingConstants.CENTER);
+    JLabel rightHeader = new JLabel("Enter An SQL Command", SwingConstants.CENTER);
+    JLabel resultHeader = new JLabel("SQL Execution Result Window");
+
+    private Connection connection;
     private boolean connected = false;
     String filePath_root = "C:\\Users\\Minnie\\Desktop\\databaseManager\\src\\db.properties";
     String filePath_client = "C:\\Users\\Minnie\\Desktop\\databaseManager\\src\\client.properties";
 
+    Properties rootUser = readPropertiesFile("C:\\Users\\Minnie\\Desktop\\databaseManager\\src\\db.properties");
+    Properties clientUser = readPropertiesFile("C:\\Users\\Minnie\\Desktop\\databaseManager\\src\\client.properties");
 
+
+    // reading in property files
     public static Properties readPropertiesFile(String fileName) throws IOException {
         FileInputStream fis = null;
         Properties prop = null;
@@ -51,7 +75,7 @@ public class GUI extends JFrame {
     }
 
     public static void main(String[] args) throws ClassNotFoundException, SQLException, IOException {
-        GUI gui = new GUI();
+        SQLClientApp gui = new SQLClientApp();
         gui.setBackground(new Color(0xF7D1CD));
         gui.setVisible(true);
         gui.pack();
@@ -61,96 +85,88 @@ public class GUI extends JFrame {
         //gui.setSize(500, 500); // sets the x and y dimension of our frame
     }
 
-    public GUI() throws ClassNotFoundException, SQLException, IOException {
+    public SQLClientApp() throws ClassNotFoundException, SQLException, IOException {
         this.init();
 
-        this.connect.addActionListener(this.connectListener());
-        this.connect.setBackground(new Color(0xD1B3C4));
+        connectButton.addActionListener(this.actionListener());
+        connectButton.setBackground(new Color(0xD1B3C4));
 
-        this.clear.addActionListener(this.clearCmdListener());
+        SQLclearButton.addActionListener(this.clearCommandListener());
     //    this.clear.setForeground(Color.RED);
-        this.clear.setBackground(new Color(0xD1B3C4));
+        SQLclearButton.setBackground(new Color(0xD1B3C4));
 
-        this.exec.addActionListener(this.execCmdListener());
+        executeCommandButton.addActionListener(this.exececuteCommandListener());
      //   this.exec.setForeground(Color.BLACK);
-        this.exec.setBackground(new Color(0xD1B3C4));
+        executeCommandButton.setBackground(new Color(0xD1B3C4));
 
-        this.clearRes.addActionListener(this.clearResultListener());
+        clearResultButton.addActionListener(this.clearResultListener());
 
 //        int i = 2;
 //        int j = 4;
 //
-//        JPanel[][] btnPanel = new JPanel[i][j];
+//        JPanel[][] buttonPanel = new JPanel[i][j];
 //        setLayout(new GridLayout(i,j));
 //
 //        for(int m = 0; m < i; m++) {
 //            for(int n = 0; n < j; n++) {
-//                btnPanel[m][n] = new JPanel();
-//                add(btnPanel[m][n]);
-//                btnPanel[1][1].add(this.status);
-//                btnPanel[1][2].add(this.connect);
-//                btnPanel[1][3].add(this.clear);
-//                btnPanel[1][4].add(this.exec);
+//                buttonPanel[m][n] = new JPanel();
+//                add(buttonPanel[m][n]);
+//                buttonPanel[1][1].add(this.status);
+//                buttonPanel[1][2].add(this.connect);
+//                buttonPanel[1][3].add(this.clear);
+//                buttonPanel[1][4].add(this.exec);
 //            }
 //        }
 
 
-
-        JPanel btnPanel = new JPanel(new GridLayout(1, 4));
-        btnPanel.setBackground(new Color(0xF7D1CD));
-        btnPanel.add(this.status);
-        btnPanel.add(this.connect);
-        btnPanel.add(this.clear);
-        btnPanel.add(this.exec);
-
+        JPanel buttonPanel = new JPanel(new GridLayout(1, 4));
+        buttonPanel.setBackground(new Color(0xF7D1CD));
+        buttonPanel.add(statusLabel);
+        buttonPanel.add(connectButton);
+        buttonPanel.add(SQLclearButton);
+        buttonPanel.add(executeCommandButton);
 
 
-        JLabel leftHeader = new JLabel("Connection Details", SwingConstants.CENTER);
-     //   leftHeader.setForeground(Color.BLUE);
-        JLabel rightHeader = new JLabel("Enter An SQL Command", SwingConstants.CENTER);
-   //     rightHeader.setForeground(Color.BLUE);
-        JLabel resultHeader = new JLabel("SQL Execution Result Window");
-   //     resultHeader.setForeground(Color.BLUE);
+        JPanel labelFields = new JPanel(new GridLayout(4, 2));
+        labelFields.setBackground(new Color(0xF7D1CD));
+        labelFields.add(propertiesLabel);
+        labelFields.add(propertiesList);
+        labelFields.add(usernameLabel);
+        labelFields.add(username);
+        labelFields.add(passwordLabel);
+        labelFields.add(password);
 
-        JPanel lblFields = new JPanel(new GridLayout(4, 2));
-        lblFields.setBackground(new Color(0xF7D1CD));
+       // JPanel connectionStatus = new JPanel(new GridLayout(1,1));
+      //  connectionStatus.add(this.status2);
 
+        // all the stuff at the top
+        JPanel topStuff = new JPanel(new GridLayout(2, 2));
+        topStuff.setBackground(new Color(0xF7D1CD));
+        topStuff.add(leftHeader);
+        topStuff.add(rightHeader);
+        topStuff.add(labelFields);
+        topStuff.add(SQLcommand);
 
-        lblFields.add(this.propertiesLabel);
-        lblFields.add(this.propertiesList);
-        lblFields.add(this.usernameLbl);
-        lblFields.add(this.username);
-        lblFields.add(this.passwordLbl);
-        lblFields.add(this.password);
+        // all the stuff at the bottom
+        JPanel bottomStuff = new JPanel();
+        bottomStuff.setBackground(new Color(0xF7D1CD));
+        bottomStuff.setLayout(new BorderLayout(20,0));
+        bottomStuff.add(resultHeader, BorderLayout.NORTH);
+        bottomStuff.add(new JScrollPane(this.table), BorderLayout.CENTER);
+        bottomStuff.add(this.clearResultButton, BorderLayout.SOUTH);
 
-        JPanel connectionStatus = new JPanel(new GridLayout(1,1));
-        connectionStatus.add(this.status2);
-
-        JPanel north = new JPanel(new GridLayout(2, 2));
-        north.setBackground(new Color(0xF7D1CD));
-        north.add(leftHeader);
-        north.add(rightHeader);
-        north.add(lblFields);
-        north.add(this.cmd);
-       // north.add(resultHeader);
-
-        JPanel south = new JPanel();
-        south.setBackground(new Color(0xF7D1CD));    
-        south.setLayout(new BorderLayout(20,0));
-        south.add(resultHeader, BorderLayout.NORTH);
-        south.add(new JScrollPane(this.table), BorderLayout.CENTER);
-        south.add(this.clearRes, BorderLayout.SOUTH);
-
-        add(north, BorderLayout.NORTH);
-        add(btnPanel, BorderLayout.CENTER);
-        add(south, BorderLayout.SOUTH);
+        add(topStuff, BorderLayout.NORTH);
+        add(buttonPanel, BorderLayout.CENTER);
+        add(bottomStuff, BorderLayout.SOUTH);
 
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+
+        // close database connection if window closes
         addWindowListener(new WindowAdapter(){
             public void windowClosed(WindowEvent event){
                 try {
-                    if(!conn.isClosed())
-                        conn.close();
+                    if(!connection.isClosed())
+                        connection.close();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -159,38 +175,36 @@ public class GUI extends JFrame {
         });
     }
 
-    private ActionListener connectListener() {
-
-
+    private ActionListener actionListener() {
         return new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent a) {
 
                 if(connected){
                     try{
-                        conn.close();
+                        connection.close();
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-                    status.setText("Not Connected");
-                    status.setForeground(Color.RED);
+                    statusLabel.setText("Not Connected to Database");
+                    statusLabel.setForeground(Color.RED);
                     table.setModel(new DefaultTableModel());
                     modelTable = null;
                     connected = false;
                 }
 
                 try{
-                    Class.forName(String.valueOf(drivers.getSelectedItem()));
-                } catch (ClassNotFoundException e) {
-                    status.setText("Not Connected");
-                    status.setForeground(Color.RED);
+                    Properties rootUser = readPropertiesFile("C:\\Users\\Minnie\\Desktop\\databaseManager\\src\\db.properties");
+                    Class.forName(String.valueOf(rootUser.getProperty("URL")));
+                } catch (ClassNotFoundException | IOException e) {
+                    statusLabel.setText("Not Connected");
+                    statusLabel.setForeground(Color.RED);
                     table.setModel(new DefaultTableModel());
                     modelTable = null;
                     e.printStackTrace();
                 }
 
                 try {
-
                     Properties rootUser = readPropertiesFile("C:\\Users\\Minnie\\Desktop\\databaseManager\\src\\db.properties");
                     Properties clientUser = readPropertiesFile("C:\\Users\\Minnie\\Desktop\\databaseManager\\src\\client.properties");
                     System.out.println("username: " + rootUser.getProperty("username"));
@@ -200,10 +214,10 @@ public class GUI extends JFrame {
                         if(Objects.equals(String.valueOf(propertiesList.getSelectedItem()), "root.properties"))
                         {
                             String selectedItem = rootUser.getProperty("URL");
-                            conn = DriverManager.getConnection(String.valueOf(selectedItem), rootUser.getProperty("username"), rootUser.getProperty("password"));
-                            status.setText("Connected to " + selectedItem);
+                            connection = DriverManager.getConnection(String.valueOf(selectedItem), rootUser.getProperty("username"), rootUser.getProperty("password"));
+                            statusLabel.setText("Connected to " + selectedItem);
                             System.out.println("username: " + rootUser.getProperty("username"));
-                            status.setForeground(new Color(0x325C44));
+                            statusLabel.setForeground(new Color(0x325C44));
                             connected = true;
                             System.out.println("matches for root");
                         }
@@ -217,9 +231,9 @@ public class GUI extends JFrame {
 
                        if(Objects.equals(String.valueOf(propertiesList.getSelectedItem()), "client.properties")) {
                            String selectedItem = clientUser.getProperty("URL");
-                           conn = DriverManager.getConnection(String.valueOf(selectedItem), clientUser.getProperty("username"), clientUser.getProperty("password"));
-                           status.setText("Connected to " + selectedItem);
-                           status.setForeground(new Color(0x325C44));
+                           connection = DriverManager.getConnection(String.valueOf(selectedItem), clientUser.getProperty("username"), clientUser.getProperty("password"));
+                           statusLabel.setText("Connected to " + selectedItem);
+                           statusLabel.setForeground(new Color(0x325C44));
                            connected = true;
                            System.out.println("matches for client");
                        }
@@ -229,10 +243,9 @@ public class GUI extends JFrame {
                    }
 
 
-
                 } catch (SQLException | IOException e) {
-                    status.setText("Not Connected");
-                    status.setForeground(Color.RED);
+                    statusLabel.setText("Not Connected");
+                    statusLabel.setForeground(Color.RED);
                     table.setModel(new DefaultTableModel());
                     modelTable = null;
                     e.printStackTrace();
@@ -241,23 +254,23 @@ public class GUI extends JFrame {
         };
     }
 
-    private ActionListener clearCmdListener() {
+    private ActionListener clearCommandListener() {
         return new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent a)
             {
-                cmd.setText("");
+                SQLcommand.setText("");
             }
         };
     }
 
-    private ActionListener execCmdListener() {
+    private ActionListener exececuteCommandListener() {
         return new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent a){
                 if(connected && modelTable == null){
                     try {
-                        modelTable = new ResultSetTableModel(cmd.getText(), conn);
+                        modelTable = new ResultSetTableModel(SQLcommand.getText(), connection);
                         table.setModel(modelTable);
                     } catch (ClassNotFoundException | IOException | SQLException e) {
                         table.setModel(new DefaultTableModel());
@@ -266,12 +279,12 @@ public class GUI extends JFrame {
                         e.printStackTrace();
                     }
                 } else {
-                    if(connected && modelTable != null){
-                        String q = cmd.getText();
+                    if(connected){
+                        String query = SQLcommand.getText();
 
-                        if(q.contains("select")){
+                        if(query.contains("select")){
                             try {
-                                modelTable.setQuery(q);
+                                modelTable.setQuery(query);
                             } catch (IllegalStateException | SQLException e) {
                                 table.setModel(new DefaultTableModel());
                                 modelTable = null;
@@ -280,7 +293,7 @@ public class GUI extends JFrame {
                             }
                         } else {
                             try {
-                                modelTable.setUpdate(q);
+                                modelTable.setUpdate(query);
                                 table.setModel(new DefaultTableModel());
                                 modelTable = null;
                             } catch (IllegalStateException | SQLException e) {
@@ -304,48 +317,22 @@ public class GUI extends JFrame {
     }
 
 
-    private void init() throws ClassNotFoundException, SQLException, IOException {
+    private void init(){
 
-        this.driver = new JLabel("JDBC Driver");
-        this.dbURL = new JLabel("Database URL");
-        this.propertiesLabel = new JLabel("Properties", SwingConstants.CENTER);
-        this.usernameLbl = new JLabel("Username", SwingConstants.CENTER);
-        this.passwordLbl = new JLabel("Password", SwingConstants.CENTER);
-        this.status = new JLabel("No connection", SwingConstants.CENTER);
-        this.status.setForeground(Color.RED);
-        this.status2 = new JLabel("No connection");
-        this.status2.setForeground(Color.RED);
-        this.status2 = new JLabel("No connection");
-        this.status2.setForeground(Color.RED);
+        statusLabel.setForeground(Color.RED);
 
-        String[] driver = {"com.mysql.jdbc.Driver", ""};
-        String[] url = {"jdbc:mysql://localhost:3306/project3", "jdbc:mysql://127.0.0.1:3306/project3"};
-        String[] properties = {"root.properties", "client.properties"};
-
-        this.drivers = new JComboBox(driver);
-        this.drivers.setSelectedIndex(0);
-        this.urlList = new JComboBox(url);
-        this.propertiesList = new JComboBox(properties);
-
-        this.username = new JTextField();
-        this.password = new JPasswordField();
-
-        this.cmd = new JTextArea(3, 80);
-        this.cmd.setWrapStyleWord(true);
-        this.cmd.setLineWrap(true);
-        this.cmd.setBackground(new Color(0xF3F3F3));
-
+        SQLcommand = new JTextArea(3, 80);
+        SQLcommand.setWrapStyleWord(true);
+        SQLcommand.setLineWrap(true);
+        SQLcommand.setBackground(new Color(0xF3F3F3));
 
         Border border = BorderFactory.createLineBorder(Color.BLACK);
-        cmd.setBorder(BorderFactory.createCompoundBorder(border,
+        SQLcommand.setBorder(BorderFactory.createCompoundBorder(border,
                 BorderFactory.createEmptyBorder(10, 10, 10, 10)));
-        this.connect = new JButton("Connect to Database");
-        this.clear = new JButton("Clear SQL Command");
-        this.exec = new JButton("Execute SQL Command");
-        this.clearRes = new JButton("Clear Result Window");
-        this.clearRes.setBackground(new Color(0xF3F3F3));
-
+        this.clearResultButton.setBackground(new Color(0xF3F3F3));
         this.table = new JTable();
+
+
     }
 
 }
