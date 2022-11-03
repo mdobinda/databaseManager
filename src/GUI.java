@@ -6,23 +6,17 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Objects;
-import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JPasswordField;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
+import java.util.Properties;
+import javax.swing.*;
+import javax.swing.border.Border;
 import javax.swing.table.DefaultTableModel;
 
 
@@ -39,13 +33,33 @@ public class GUI extends JFrame {
     private JTable table;
     private Connection conn;
     private boolean connected = false;
+    String filePath_root = "C:\\Users\\Minnie\\Desktop\\databaseManager\\src\\db.properties";
+    String filePath_client = "C:\\Users\\Minnie\\Desktop\\databaseManager\\src\\client.properties";
+
+
+    public static Properties readPropertiesFile(String fileName) throws IOException {
+        FileInputStream fis = null;
+        Properties prop = null;
+        try {
+            fis = new FileInputStream(fileName);
+            prop = new Properties();
+            prop.load(fis);
+        } catch(IOException fnfe) {
+            fnfe.printStackTrace();
+        } finally {
+            fis.close();
+        }
+        return prop;
+    }
 
     public static void main(String[] args) throws ClassNotFoundException, SQLException, IOException {
         GUI gui = new GUI();
+        gui.setBackground(new Color(0xF7D1CD));
         gui.setVisible(true);
         gui.pack();
       //  gui.setLayout(new BorderLayout(1,0));
         gui.setResizable(true); // prevent from being resized
+
         //gui.setSize(500, 500); // sets the x and y dimension of our frame
     }
 
@@ -53,21 +67,15 @@ public class GUI extends JFrame {
         this.init();
 
         this.connect.addActionListener(this.connectListener());
-        this.connect.setForeground(Color.YELLOW);
-        this.connect.setBackground(Color.BLUE);
+        this.connect.setBackground(new Color(0xD1B3C4));
 
         this.clear.addActionListener(this.clearCmdListener());
-        this.clear.setForeground(Color.RED);
-        this.clear.setBackground(Color.WHITE);
-
-        this.testButton.addActionListener(this.clearCmdListener());
-        this.testButton.setForeground(Color.RED);
-        this.testButton.setBackground(Color.WHITE);
-        this.testButton.setText("testing ");
+    //    this.clear.setForeground(Color.RED);
+        this.clear.setBackground(new Color(0xD1B3C4));
 
         this.exec.addActionListener(this.execCmdListener());
-        this.exec.setForeground(Color.BLACK);
-        this.exec.setBackground(Color.GREEN);
+     //   this.exec.setForeground(Color.BLACK);
+        this.exec.setBackground(new Color(0xD1B3C4));
 
         this.clearRes.addActionListener(this.clearResultListener());
 
@@ -90,23 +98,24 @@ public class GUI extends JFrame {
 
 
 
-        JPanel btnPanel = new JPanel(new GridLayout(2, 4));
+        JPanel btnPanel = new JPanel(new GridLayout(1, 4));
+        btnPanel.setBackground(new Color(0xF7D1CD));
         btnPanel.add(this.status);
         btnPanel.add(this.connect);
         btnPanel.add(this.clear);
         btnPanel.add(this.exec);
-        btnPanel.add(this.testButton);
 
 
-        JLabel leftHeader = new JLabel("Enter Database Information");
-      //  leftHeader.setForeground(Color.BLUE);
-        leftHeader.setForeground(Color.BLUE);
-        JLabel rightHeader = new JLabel("Enter A SQL Command");
-        rightHeader.setForeground(Color.BLUE);
+
+        JLabel leftHeader = new JLabel("Enter Database Information", SwingConstants.CENTER);
+     //   leftHeader.setForeground(Color.BLUE);
+        JLabel rightHeader = new JLabel("Enter A SQL Command", SwingConstants.CENTER);
+   //     rightHeader.setForeground(Color.BLUE);
         JLabel resultHeader = new JLabel("Execution Result Window");
-        resultHeader.setForeground(Color.BLUE);
+   //     resultHeader.setForeground(Color.BLUE);
 
         JPanel lblFields = new JPanel(new GridLayout(4, 2));
+        lblFields.setBackground(new Color(0xF7D1CD));
 
 
         lblFields.add(this.propertiesLabel);
@@ -120,16 +129,19 @@ public class GUI extends JFrame {
         connectionStatus.add(this.status2);
 
         JPanel north = new JPanel(new GridLayout(2, 2));
+        north.setBackground(new Color(0xF7D1CD));
         north.add(leftHeader);
         north.add(rightHeader);
         north.add(lblFields);
         north.add(this.cmd);
+       // north.add(resultHeader);
 
         JPanel south = new JPanel();
+        south.setBackground(new Color(0xF7D1CD));    
         south.setLayout(new BorderLayout(20,0));
-        south.add(resultHeader);
+        south.add(resultHeader, BorderLayout.NORTH);
+        south.add(new JScrollPane(this.table), BorderLayout.CENTER);
         south.add(this.clearRes, BorderLayout.SOUTH);
-        south.add(new JScrollPane(this.table), BorderLayout.NORTH);
 
         add(north, BorderLayout.NORTH);
         add(btnPanel, BorderLayout.CENTER);
@@ -150,9 +162,12 @@ public class GUI extends JFrame {
     }
 
     private ActionListener connectListener() {
+
+
         return new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent a){
+            public void actionPerformed(ActionEvent a) {
+
                 if(connected){
                     try{
                         conn.close();
@@ -178,23 +193,46 @@ public class GUI extends JFrame {
 
                 try {
 
-                    if(Objects.equals(String.valueOf(propertiesList.getSelectedItem()), "root.properties"))
-                    {
-                        String selectedItem = "jdbc:mysql://localhost:3306/project3";
-                        conn = DriverManager.getConnection(selectedItem, username.getText(), String.valueOf(password.getPassword()));
-                        status.setText("Connected to " + selectedItem);
-                        status.setForeground(Color.GREEN);
-                        connected = true;
+                    Properties rootUser = readPropertiesFile("C:\\Users\\Minnie\\Desktop\\databaseManager\\src\\db.properties");
+                    Properties clientUser = readPropertiesFile("C:\\Users\\Minnie\\Desktop\\databaseManager\\src\\client.properties");
+                    System.out.println("username: " + rootUser.getProperty("username"));
+
+                    if(Objects.equals(username.getText(), rootUser.getProperty("username")) && (Objects.equals(String.valueOf(password.getPassword()), rootUser.getProperty("password"))  )) {
+
+                        if(Objects.equals(String.valueOf(propertiesList.getSelectedItem()), "root.properties"))
+                        {
+                            String selectedItem = rootUser.getProperty("URL");
+                            conn = DriverManager.getConnection(String.valueOf(selectedItem), rootUser.getProperty("username"), rootUser.getProperty("password"));
+                            status.setText("Connected to " + selectedItem);
+                            System.out.println("username: " + rootUser.getProperty("username"));
+                            status.setForeground(new Color(0x325C44));
+                            connected = true;
+                            System.out.println("matches for root");
+                        }
+
                     }
                     else {
-                        String selectedItem = "jdbc:mysql://127.0.0.1:3306/project3";
-                        conn = DriverManager.getConnection(selectedItem, username.getText(), String.valueOf(password.getPassword()));
-                        status.setText("Connected to " + selectedItem);
-                        status.setForeground(Color.GREEN);
-                        connected = true;
+                        System.out.println("no match for root");
                     }
 
-                } catch (SQLException e) {
+                   if (Objects.equals(username.getText(), clientUser.getProperty("username")) && (Objects.equals(String.valueOf(password.getPassword()), clientUser.getProperty("password"))  )) {
+
+                       if(Objects.equals(String.valueOf(propertiesList.getSelectedItem()), "client.properties")) {
+                           String selectedItem = clientUser.getProperty("URL");
+                           conn = DriverManager.getConnection(String.valueOf(selectedItem), clientUser.getProperty("username"), clientUser.getProperty("password"));
+                           status.setText("Connected to " + selectedItem);
+                           status.setForeground(new Color(0x325C44));
+                           connected = true;
+                           System.out.println("matches for client");
+                       }
+                    }
+                   else {
+                       System.out.println("no match for client");
+                   }
+
+
+
+                } catch (SQLException | IOException e) {
                     status.setText("Not Connected");
                     status.setForeground(Color.RED);
                     table.setModel(new DefaultTableModel());
@@ -271,10 +309,10 @@ public class GUI extends JFrame {
     private void init() throws ClassNotFoundException, SQLException, IOException {
         this.driver = new JLabel("JDBC Driver");
         this.dbURL = new JLabel("Database URL");
-        this.propertiesLabel = new JLabel("Properties");
-        this.usernameLbl = new JLabel("Username");
-        this.passwordLbl = new JLabel("Password");
-        this.status = new JLabel("No connection");
+        this.propertiesLabel = new JLabel("Properties", SwingConstants.CENTER);
+        this.usernameLbl = new JLabel("Username", SwingConstants.CENTER);
+        this.passwordLbl = new JLabel("Password", SwingConstants.CENTER);
+        this.status = new JLabel("No connection", SwingConstants.CENTER);
         this.status.setForeground(Color.RED);
         this.status2 = new JLabel("No connection");
         this.status2.setForeground(Color.RED);
@@ -296,12 +334,18 @@ public class GUI extends JFrame {
         this.cmd = new JTextArea(3, 80);
         this.cmd.setWrapStyleWord(true);
         this.cmd.setLineWrap(true);
+        this.cmd.setBackground(new Color(0xF3F3F3));
 
+
+
+        Border border = BorderFactory.createLineBorder(Color.BLACK);
+        cmd.setBorder(BorderFactory.createCompoundBorder(border,
+                BorderFactory.createEmptyBorder(10, 10, 10, 10)));
         this.connect = new JButton("Connect to DB");
         this.clear = new JButton("Clear Command");
         this.exec = new JButton("Execute");
         this.clearRes = new JButton("Clear Results");
-        this.testButton = new JButton("Testing");
+        this.clearRes.setBackground(new Color(0xF3F3F3));
 
         this.table = new JTable();
     }
