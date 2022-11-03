@@ -7,12 +7,10 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.Objects;
 import java.util.Properties;
 import javax.swing.*;
@@ -29,7 +27,7 @@ public class GUI extends JFrame {
     private JPasswordField password;
     private JTextArea cmd;
     private JButton connect, clear, exec, clearRes, testButton;
-    private SQLTableModel modelTable;
+    private ResultSetTableModel modelTable;
     private JTable table;
     private Connection conn;
     private boolean connected = false;
@@ -107,11 +105,11 @@ public class GUI extends JFrame {
 
 
 
-        JLabel leftHeader = new JLabel("Enter Database Information", SwingConstants.CENTER);
+        JLabel leftHeader = new JLabel("Connection Details", SwingConstants.CENTER);
      //   leftHeader.setForeground(Color.BLUE);
-        JLabel rightHeader = new JLabel("Enter A SQL Command", SwingConstants.CENTER);
+        JLabel rightHeader = new JLabel("Enter An SQL Command", SwingConstants.CENTER);
    //     rightHeader.setForeground(Color.BLUE);
-        JLabel resultHeader = new JLabel("Execution Result Window");
+        JLabel resultHeader = new JLabel("SQL Execution Result Window");
    //     resultHeader.setForeground(Color.BLUE);
 
         JPanel lblFields = new JPanel(new GridLayout(4, 2));
@@ -259,7 +257,7 @@ public class GUI extends JFrame {
             public void actionPerformed(ActionEvent a){
                 if(connected && modelTable == null){
                     try {
-                        modelTable = new SQLTableModel(cmd.getText(), conn);
+                        modelTable = new ResultSetTableModel(cmd.getText(), conn);
                         table.setModel(modelTable);
                     } catch (ClassNotFoundException | IOException | SQLException e) {
                         table.setModel(new DefaultTableModel());
@@ -269,7 +267,7 @@ public class GUI extends JFrame {
                     }
                 } else {
                     if(connected && modelTable != null){
-                        String q = cmd.getText().toLowerCase();
+                        String q = cmd.getText();
 
                         if(q.contains("select")){
                             try {
@@ -307,6 +305,7 @@ public class GUI extends JFrame {
 
 
     private void init() throws ClassNotFoundException, SQLException, IOException {
+
         this.driver = new JLabel("JDBC Driver");
         this.dbURL = new JLabel("Database URL");
         this.propertiesLabel = new JLabel("Properties", SwingConstants.CENTER);
@@ -337,14 +336,13 @@ public class GUI extends JFrame {
         this.cmd.setBackground(new Color(0xF3F3F3));
 
 
-
         Border border = BorderFactory.createLineBorder(Color.BLACK);
         cmd.setBorder(BorderFactory.createCompoundBorder(border,
                 BorderFactory.createEmptyBorder(10, 10, 10, 10)));
-        this.connect = new JButton("Connect to DB");
-        this.clear = new JButton("Clear Command");
-        this.exec = new JButton("Execute");
-        this.clearRes = new JButton("Clear Results");
+        this.connect = new JButton("Connect to Database");
+        this.clear = new JButton("Clear SQL Command");
+        this.exec = new JButton("Execute SQL Command");
+        this.clearRes = new JButton("Clear Result Window");
         this.clearRes.setBackground(new Color(0xF3F3F3));
 
         this.table = new JTable();
